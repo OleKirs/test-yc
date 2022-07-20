@@ -45,3 +45,12 @@ resource "yandex_vpc_subnet" "subnet-stage" {
   folder_id      = var.stage_folder_id
 }
 
+##########################################################
+resource "yandex_vpc_subnet" "subnet-tools" {
+  name           = "subnet-tools"
+  zone           = "ru-central1-a"
+  network_id     = yandex_vpc_network.vpc-infra.id
+  v4_cidr_blocks = ["10.30.0.0/24"]
+  route_table_id = yandex_vpc_route_table.rt-inet.id
+  folder_id      = var.stage_folder_id
+}

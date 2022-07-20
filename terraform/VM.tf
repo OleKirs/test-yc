@@ -113,8 +113,8 @@ resource "yandex_compute_instance" "gitlab" {
     }
   }
   network_interface {
-    subnet_id  = yandex_vpc_subnet.subnet-a.id
-    ip_address = "10.0.0.50"
+    subnet_id  = yandex_vpc_subnet.subnet-tools.id
+    ip_address = "10.30.0.50"
     nat = false
     security_group_ids = [yandex_vpc_security_group.sg-ci-cd.id]
   }
@@ -146,8 +146,8 @@ resource "yandex_compute_instance" "runner" {
     }
   }
   network_interface {
-    subnet_id  = yandex_vpc_subnet.subnet-a.id
-    ip_address = "10.0.0.51"
+    subnet_id  = yandex_vpc_subnet.subnet-tools.id
+    ip_address = "10.30.0.51"
     nat = false
     security_group_ids = [yandex_vpc_security_group.sg-ci-cd.id]
   }
@@ -157,6 +157,41 @@ resource "yandex_compute_instance" "runner" {
   }
 }
 
+#####  MONITORING  ###########################################################
+
+resource "yandex_compute_instance" "monitoring" {
+  zone        = "ru-central1-a"
+  name        = "monitoring"
+  hostname    = "monitoring"
+  platform_id = "standard-v1"
+  folder_id = var.stage_folder_id
+  allow_stopping_for_update = true
+  resources {
+    cores  = 2
+    memory = 1
+    core_fraction = 5
+  }
+  scheduling_policy {
+    preemptible = true
+  }
+  boot_disk {
+    initialize_params {
+      image_id = data.yandex_compute_image.vm_img.id
+      type     = "network-hdd"
+      size     = 10
+    }
+  }
+  network_interface {
+    subnet_id  = yandex_vpc_subnet.subnet-tools.id
+    ip_address = "10.30.0.200"
+    nat = false
+    security_group_ids = [yandex_vpc_security_group.sg-stage.id]
+  }
+  metadata = {
+    user-data = "${data.template_file.cloud_init.rendered}"
+    serial-port-enable = 1
+  }
+}
 
 #####  APP (wordpress)  ###########################################################
 
@@ -266,38 +301,4 @@ resource "yandex_compute_instance" "db02" {
   }
 }
 
-#####  MONITORING  ###########################################################
 
-resource "yandex_compute_instance" "monitoring" {
-  zone        = "ru-central1-a"
-  name        = "monitoring"
-  hostname    = "monitoring"
-  platform_id = "standard-v1"
-  folder_id = var.stage_folder_id
-  allow_stopping_for_update = true
-  resources {
-    cores  = 2
-    memory = 1
-    core_fraction = 5
-  }
-  scheduling_policy {
-    preemptible = true
-  }
-  boot_disk {
-    initialize_params {
-      image_id = data.yandex_compute_image.vm_img.id
-      type     = "network-hdd"
-      size     = 10
-    }
-  }
-  network_interface {
-    subnet_id  = yandex_vpc_subnet.subnet-stage.id
-    ip_address = "10.20.0.200"
-    nat = false
-    security_group_ids = [yandex_vpc_security_group.sg-stage.id]
-  }
-  metadata = {
-    user-data = "${data.template_file.cloud_init.rendered}"
-    serial-port-enable = 1
-  }
-}
