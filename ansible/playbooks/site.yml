@@ -1,4 +1,6 @@
 ---
 # file: site.yml
 - import_playbook: nat-instance.yml
-# - import_playbook: dbservers.yml
+- import_playbook: dbservers.yml
+- import_playbook: wordpress.yml
+

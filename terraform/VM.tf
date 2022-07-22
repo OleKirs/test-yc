@@ -31,7 +31,7 @@ resource "yandex_compute_instance" "nat-instance" {
   resources {
     cores  = 2
     memory = 2
-    core_fraction = 100
+    core_fraction = 20
   }
   scheduling_policy {
     preemptible = true
@@ -206,8 +206,8 @@ resource "yandex_compute_instance" "app" {
   allow_stopping_for_update = true
   resources {
     cores  = 2
-    memory = 1
-    core_fraction = 20
+    memory = 4
+    core_fraction = 100
   }
   scheduling_policy {
     preemptible = true
@@ -267,39 +267,39 @@ resource "yandex_compute_instance" "db01" {
   }
 }
 
-#######  DB02  ##########################################################
-
-resource "yandex_compute_instance" "db02" {
-  zone        = "ru-central1-a"
-  name        = "db02"
-  hostname    = "db02"
-  platform_id = "standard-v1"
-  folder_id = var.stage_folder_id
-  allow_stopping_for_update = true
-  resources {
-    cores  = 2
-    memory = 2
-    core_fraction = 20
-  }
-  scheduling_policy {
-    preemptible = true
-  }
-  boot_disk {
-    initialize_params {
-      image_id = data.yandex_compute_image.vm_img.id
-      type     = "network-hdd"
-      size     = 10
-    }
-  }
-  network_interface {
-    subnet_id  = yandex_vpc_subnet.subnet-stage.id
-    ip_address = "10.20.0.155"
-    nat = false
-    security_group_ids = [yandex_vpc_security_group.sg-stage.id]
-  }
-  metadata = {
-    user-data = "${data.template_file.cloud_init.rendered}"
-    serial-port-enable = 1
-  }
-}
+########  DB02  ##########################################################
+#
+#resource "yandex_compute_instance" "db02" {
+#  zone        = "ru-central1-a"
+#  name        = "db02"
+#  hostname    = "db02"
+#  platform_id = "standard-v1"
+#  folder_id = var.stage_folder_id
+#  allow_stopping_for_update = true
+#  resources {
+#    cores  = 2
+#    memory = 2
+#    core_fraction = 20
+#  }
+#  scheduling_policy {
+#    preemptible = true
+#  }
+#  boot_disk {
+#    initialize_params {
+#      image_id = data.yandex_compute_image.vm_img.id
+#      type     = "network-hdd"
+#      size     = 10
+#    }
+#  }
+#  network_interface {
+#    subnet_id  = yandex_vpc_subnet.subnet-stage.id
+#    ip_address = "10.20.0.155"
+#    nat = false
+#    security_group_ids = [yandex_vpc_security_group.sg-stage.id]
+#  }
+#  metadata = {
+#    user-data = "${data.template_file.cloud_init.rendered}"
+#    serial-port-enable = 1
+#  }
+#}
 # _EOF

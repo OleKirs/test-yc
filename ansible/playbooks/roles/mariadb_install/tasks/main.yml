@@ -1,35 +1,51 @@
+---
+# file: roles/mariadb_install/tasks/main.yml
 - name: 'Install nginx & letsencrypt & DH-group'
-#  tags: [install_pkgs, never]
+#  tags: [ install_pkgs, never ]
   become: true
   block:
     - name: 'Install mariadb'
       ansible.builtin.apt:
-        pkg: [mariadb, mariadb-server]
-        update_cache: true
-        cache_valid_time: '28800'
-        update_cache: yes
+        pkg: [ 'mariadb-server', 'python3-pymysql' ]
     - name: start and enable mysql service
       ansible.builtin.service:
         name: mysql
         state: started
-        enabled: yes
-- name: creating mysql user (medium_post)
+        enabled: true
+    - name: Create user account & grant `root` privileges
+      community.mysql.mysql_user:
+        name: "{{ db_user }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        host: '%'
+        password: '{{ db_pass }}'
+        priv: "*.*:ALL,GRANT"
+        check_implicit_admin: true
+- name: Removes the MySQL test database
+  community.mysql.mysql_db:
+    name: test
+    state: absent
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_pass }}"
+- name: Removes all anonymous user accounts
   community.mysql.mysql_user:
-    name: "{{db_user}}"
-    password: "{{db_pass}}"
-    priv: '*.*:ALL'
-    host: '%'
-    state: present
-- name: creating database
+    name: ''
+    host_all: yes
+    state: absent
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_pass }}"
+- name: 'creating database'
   community.mysql.mysql_db:
     name: "{{db_name}}"
     state: present
-- name: Enable remote login to mysql
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_pass }}"
+- name: 'Enable remote login to mysql'
+  become: true
   ansible.builtin.lineinfile:
-     path: /etc/mysql/mysql.conf.d/mysqld.cnf
-     regexp: '^bind-address'
-     line: 'bind-address = 0.0.0.0'
-     backup: yes
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: '^bind-address'
+    line: 'bind-address = 0.0.0.0'
+    backup: true
   notify:
-     - mysql restart
+    - mysql restart
 # _EOF_

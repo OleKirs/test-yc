@@ -18,13 +18,13 @@ output "external_ip_address_bastion" {
 #  value = yandex_compute_instance.app.network_interface.0.ip_address
 #}
 
-output "internal_ip_address_db01" {
-  value = yandex_compute_instance.db01.network_interface.0.ip_address
-}
+#output "internal_ip_address_db01" {
+#  value = yandex_compute_instance.db01.network_interface.0.ip_address
+#}
 
-output "internal_ip_address_db02" {
-  value = yandex_compute_instance.db02.network_interface.0.ip_address
-}
+#output "internal_ip_address_db02" {
+#  value = yandex_compute_instance.db02.network_interface.0.ip_address
+#}
 
 #output "internal_ip_address_monitoring" {
 #  value = yandex_compute_instance.monitoring.network_interface.0.ip_address

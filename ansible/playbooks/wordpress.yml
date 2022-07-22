@@ -1,0 +1,18 @@
+---
+- hosts: webapp
+  gather_facts: false
+  become: true
+  vars:
+    - domain: "gw22.pw"
+    - download_url: "http://wordpress.org/latest.tar.gz"
+    - wpdirectory: "/usr/share/nginx/gw22.pw"
+    - db_name: "wordpress"
+    - db_user: "wordpress"
+    - db_password: "wordpress"
+    - db_socket: "10.20.0.150:3306"
+  roles:
+  - { role: nginx-wp }
+  - { role: php }
+  - { role: wordpress }
+
+# _EOF_

@@ -172,7 +172,14 @@ resource "yandex_vpc_security_group" "sg-stage" {
     v4_cidr_blocks = ["0.0.0.0/0"]
     port           = 3000
   }
-  
+
+  ingress {
+    protocol       = "TCP"
+    description    = "ANY can only access to Grafana"
+    v4_cidr_blocks = ["10.0.0.0/8", "127.0.0.1/32"]
+    port           = 3306
+  }
+
   ingress {
     protocol       = "TCP"
     description    = "ANY can only access to Prometeus"
