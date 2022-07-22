@@ -30,12 +30,13 @@ resource "yandex_compute_instance" "nat-instance" {
   platform_id = "standard-v1"
   resources {
     cores  = 2
-    memory = 1
-    core_fraction = 5
+    memory = 2
+    core_fraction = 100
   }
   scheduling_policy {
     preemptible = true
   }
+  allow_stopping_for_update = true
   boot_disk {
     initialize_params {
       image_id = data.yandex_compute_image.nat_instance.id
@@ -66,11 +67,12 @@ resource "yandex_compute_instance" "bastion" {
   resources {
     cores  = 2
     memory = 1
-    core_fraction = 5
+    core_fraction = 20
   }
   scheduling_policy {
     preemptible = true
   }
+  allow_stopping_for_update = true
   boot_disk {
     initialize_params {
       image_id = data.yandex_compute_image.img_bastion.id
@@ -91,109 +93,109 @@ resource "yandex_compute_instance" "bastion" {
   }
 }
 
-#####  GITLAB  ###########################################################
-resource "yandex_compute_instance" "gitlab" {
-  zone        = "ru-central1-a"
-  name        = "gitlab"
-  hostname    = "gitlab"
-  platform_id = "standard-v1"
-  resources {
-    cores  = 2
-    memory = 1
-    core_fraction = 5
-  }
-  scheduling_policy {
-    preemptible = true
-  }
-  boot_disk {
-    initialize_params {
-      image_id = data.yandex_compute_image.vm_img.id
-      type     = "network-hdd"
-      size     = 10
-    }
-  }
-  network_interface {
-    subnet_id  = yandex_vpc_subnet.subnet-tools.id
-    ip_address = "10.30.0.50"
-    nat = false
-    security_group_ids = [yandex_vpc_security_group.sg-ci-cd.id]
-  }
-  metadata = {
-    user-data = "${data.template_file.cloud_init.rendered}"
-    serial-port-enable = 1
-  }
-}
+#######  GITLAB  ###########################################################
+#resource "yandex_compute_instance" "gitlab" {
+#  zone        = "ru-central1-a"
+#  name        = "gitlab"
+#  hostname    = "gitlab"
+#  platform_id = "standard-v1"
+#  resources {
+#    cores  = 2
+#    memory = 1
+#    core_fraction = 20
+#  }
+#  scheduling_policy {
+#    preemptible = true
+#  }
+#  boot_disk {
+#    initialize_params {
+#      image_id = data.yandex_compute_image.vm_img.id
+#      type     = "network-hdd"
+#      size     = 10
+#    }
+#  }
+#  network_interface {
+#    subnet_id  = yandex_vpc_subnet.subnet-tools.id
+#    ip_address = "10.30.0.50"
+#    nat = false
+#    security_group_ids = [yandex_vpc_security_group.sg-ci-cd.id]
+#  }
+#  metadata = {
+#    user-data = "${data.template_file.cloud_init.rendered}"
+#    serial-port-enable = 1
+#  }
+#}
 
-#####  RUNNER  ###########################################################
-resource "yandex_compute_instance" "runner" {
-  zone        = "ru-central1-a"
-  name        = "runner"
-  hostname    = "runner"
-  platform_id = "standard-v1"
-  resources {
-    cores  = 2
-    memory = 1
-    core_fraction = 5
-  }
-  scheduling_policy {
-    preemptible = true
-  }
-  boot_disk {
-    initialize_params {
-      image_id = data.yandex_compute_image.vm_img.id
-      type     = "network-hdd"
-      size     = 10
-    }
-  }
-  network_interface {
-    subnet_id  = yandex_vpc_subnet.subnet-tools.id
-    ip_address = "10.30.0.51"
-    nat = false
-    security_group_ids = [yandex_vpc_security_group.sg-ci-cd.id]
-  }
-  metadata = {
-    user-data = "${data.template_file.cloud_init.rendered}"
-    serial-port-enable = 1
-  }
-}
+######  RUNNER  ###########################################################
+#resource "yandex_compute_instance" "runner" {
+#  zone        = "ru-central1-a"
+#  name        = "runner"
+#  hostname    = "runner"
+#  platform_id = "standard-v1"
+#  resources {
+#    cores  = 2
+#    memory = 1
+#    core_fraction = 5
+#  }
+#  scheduling_policy {
+#    preemptible = true
+#  }
+#  boot_disk {
+#    initialize_params {
+#      image_id = data.yandex_compute_image.vm_img.id
+#      type     = "network-hdd"
+#      size     = 10
+#    }
+#  }
+#  network_interface {
+#    subnet_id  = yandex_vpc_subnet.subnet-tools.id
+#    ip_address = "10.30.0.51"
+#    nat = false
+#    security_group_ids = [yandex_vpc_security_group.sg-ci-cd.id]
+#  }
+#  metadata = {
+#    user-data = "${data.template_file.cloud_init.rendered}"
+#    serial-port-enable = 1
+#  }
+#}
+#
+######  MONITORING  ###########################################################
 
-#####  MONITORING  ###########################################################
+#resource "yandex_compute_instance" "monitoring" {
+#  zone        = "ru-central1-a"
+#  name        = "monitoring"
+#  hostname    = "monitoring"
+#  platform_id = "standard-v1"
+#  folder_id = var.stage_folder_id
+#  allow_stopping_for_update = true
+#  resources {
+#    cores  = 2
+#    memory = 1
+#    core_fraction = 20
+#  }
+#  scheduling_policy {
+#    preemptible = true
+#  }
+#  boot_disk {
+#    initialize_params {
+#      image_id = data.yandex_compute_image.vm_img.id
+#      type     = "network-hdd"
+#      size     = 10
+#    }
+#  }
+#  network_interface {
+#    subnet_id  = yandex_vpc_subnet.subnet-tools.id
+#    ip_address = "10.30.0.200"
+#    nat = false
+#    security_group_ids = [yandex_vpc_security_group.sg-stage.id]
+#  }
+#  metadata = {
+#    user-data = "${data.template_file.cloud_init.rendered}"
+#    serial-port-enable = 1
+#  }
+#}
 
-resource "yandex_compute_instance" "monitoring" {
-  zone        = "ru-central1-a"
-  name        = "monitoring"
-  hostname    = "monitoring"
-  platform_id = "standard-v1"
-  folder_id = var.stage_folder_id
-  allow_stopping_for_update = true
-  resources {
-    cores  = 2
-    memory = 1
-    core_fraction = 5
-  }
-  scheduling_policy {
-    preemptible = true
-  }
-  boot_disk {
-    initialize_params {
-      image_id = data.yandex_compute_image.vm_img.id
-      type     = "network-hdd"
-      size     = 10
-    }
-  }
-  network_interface {
-    subnet_id  = yandex_vpc_subnet.subnet-tools.id
-    ip_address = "10.30.0.200"
-    nat = false
-    security_group_ids = [yandex_vpc_security_group.sg-stage.id]
-  }
-  metadata = {
-    user-data = "${data.template_file.cloud_init.rendered}"
-    serial-port-enable = 1
-  }
-}
-
-#####  APP (wordpress)  ###########################################################
+######  APP (wordpress)  ###########################################################
 
 resource "yandex_compute_instance" "app" {
   zone        = "ru-central1-a"
@@ -205,7 +207,7 @@ resource "yandex_compute_instance" "app" {
   resources {
     cores  = 2
     memory = 1
-    core_fraction = 5
+    core_fraction = 20
   }
   scheduling_policy {
     preemptible = true
@@ -229,7 +231,7 @@ resource "yandex_compute_instance" "app" {
   }
 }
 
-#####  DB01  ###########################################################
+######  DB01  ###########################################################
 
 resource "yandex_compute_instance" "db01" {
   zone        = "ru-central1-a"
@@ -240,8 +242,8 @@ resource "yandex_compute_instance" "db01" {
   allow_stopping_for_update = true
   resources {
     cores  = 2
-    memory = 1
-    core_fraction = 5
+    memory = 2
+    core_fraction = 20
   }
   scheduling_policy {
     preemptible = true
@@ -265,7 +267,7 @@ resource "yandex_compute_instance" "db01" {
   }
 }
 
-######  DB02  ##########################################################
+#######  DB02  ##########################################################
 
 resource "yandex_compute_instance" "db02" {
   zone        = "ru-central1-a"
@@ -276,8 +278,8 @@ resource "yandex_compute_instance" "db02" {
   allow_stopping_for_update = true
   resources {
     cores  = 2
-    memory = 1
-    core_fraction = 5
+    memory = 2
+    core_fraction = 20
   }
   scheduling_policy {
     preemptible = true
@@ -300,5 +302,4 @@ resource "yandex_compute_instance" "db02" {
     serial-port-enable = 1
   }
 }
-
-
+# _EOF

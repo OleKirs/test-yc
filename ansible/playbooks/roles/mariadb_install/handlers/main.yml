@@ -1,0 +1,7 @@
+---
+- name: mysql restart
+become: yes
+  ansible.builtin.service:
+    name: mysql
+    state: restarted
+# _EOF_

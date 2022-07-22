@@ -1,0 +1,10 @@
+---
+# file: inventories/stage/group_vars/all.yml
+
+# Connection settings
+ansible_port: 22
+ansible_connection: ssh
+ansible_user: yc-user
+ansible_ssh_private_key_file: ~/.ssh/id_rsa
+# Use "Jump host" to connect into VPC
+ansible_ssh_common_args:  '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o "ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_rsa -W %h:%p yc-user@51.250.75.189"'

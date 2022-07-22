@@ -126,18 +126,17 @@ resource "yandex_vpc_security_group" "sg-stage" {
   network_id  = yandex_vpc_network.vpc-infra.id
   folder_id   = var.stage_folder_id
 
+  ingress {
+    protocol       = "ICMP"
+    description    = "allows ping  through Bastion"
+    security_group_id  = yandex_vpc_security_group.sg-bastion.id
+  }
 
   ingress {
     protocol       = "TCP"
     description    = "allows remote access through Bastion"
     security_group_id  = yandex_vpc_security_group.sg-bastion.id
     port           = 22
-  }
-
-  ingress {
-    protocol       = "ICMP"
-    description    = "allows ping  through Bastion"
-    security_group_id  = yandex_vpc_security_group.sg-bastion.id
   }
 
   ingress {
@@ -167,6 +166,27 @@ resource "yandex_vpc_security_group" "sg-stage" {
     port           = 443
   }
   
+  ingress {
+    protocol       = "TCP"
+    description    = "ANY can only access to Grafana"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 3000
+  }
+  
+  ingress {
+    protocol       = "TCP"
+    description    = "ANY can only access to Prometeus"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 9090
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "ANY can only access to Alertmanager"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 9093
+  }
+
   egress {
     protocol       = "ANY"
     description    = "we allow any egress for stage, since we block prod on ingress"
