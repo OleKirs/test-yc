@@ -1,19 +1,31 @@
----
-- name: install php
+# file: roles/php/tasks/main.yml
+- name: 'Renew repo for PHP'
+  block:
+    - name: 'Add ondrej-php repository from PPA'
+      become: true
+      ansible.builtin.apt_repository:
+        repo: ppa:ondrej/php
+    - name: 'Only run "update_cache=yes" if the last one is more than 28800 seconds ago'
+      become: true
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 28800
+- name: 'Install php'
+  become: true
   apt: pkg={{ item }}
-  with_items: 
-    - php7.2
-    - php7.2-fpm
-    - php7.2-mysql
+  with_items:
+    - php
     - php-common
-    - php7.2-cli
-    - php7.2-common
-    - php7.2-json
-    - php7.2-opcache
-    - php7.2-readline
-    - php7.2-mbstring
-    - php7.2-xml
-    - php7.2-gd
-    - php7.2-curl
+    - php-cli
+    - php-fpm
+    - php-curl
+    - php-mysql
+    - php-readline
+    - php-mbstring
+    - php-xml
+    - php-intl
+#    - php-opcache
+    - php-gd
+    - libapache2-mod-php
   notify: restart php-fpm
 # _EOF_
