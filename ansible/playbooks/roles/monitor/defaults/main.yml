@@ -13,6 +13,6 @@ packages:
 docker_project_dir: '/opt/prometheus_stack'
 prometheus_targets: '[localhost:9100]'
 telegram_admin_id: '1234567890'
-tegegram_tocken: '1234567890:AAETxTOKENxxMUSTxBExxHERE'
+telegram_tocken: '1234567890:AAETxTOKENxxMUSTxBExxHERE'
 
 # _EOF_

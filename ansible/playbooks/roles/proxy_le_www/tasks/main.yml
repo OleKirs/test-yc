@@ -53,8 +53,8 @@
   tags: create_le_cert
   become: true
   ansible.builtin.shell: |
-    letsencrypt certonly -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }}
-#    letsencrypt certonly --test-cert -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }}
+    letsencrypt certonly --test-cert -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }}
+#    letsencrypt certonly -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }}
   args:
     creates: /etc/letsencrypt/live/{{ domain_name }}
   notify:
@@ -77,7 +77,8 @@
   ansible.builtin.cron:
     name: letsencrypt_renewal
     special_time: weekly
-    job: letsencrypt certonly -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }} && service nginx reload
+    job: letsencrypt certonly -n --test-cert --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }} && service nginx reload
+#    job: letsencrypt certonly -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }} && service nginx reload
   notify:
     - cron restart
 # _EOF_
