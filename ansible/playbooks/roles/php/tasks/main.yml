@@ -8,11 +8,11 @@
     - name: 'Only run "update_cache=yes" if the last one is more than 28800 seconds ago'
       become: true
       ansible.builtin.apt:
-        update_cache: yes
+        update_cache: true
         cache_valid_time: 28800
 - name: 'Install php'
   become: true
-  apt: pkg={{ item }}
+  ansible.builtin.apt: pkg={{ item }}
   with_items:
     - php
     - php-common
@@ -24,7 +24,6 @@
     - php-mbstring
     - php-xml
     - php-intl
-#    - php-opcache
     - php-gd
     - libapache2-mod-php
   notify: restart php-fpm

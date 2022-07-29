@@ -1,8 +1,0 @@
----
-# file: roles/nginx/vars/main.yml
-
-# worker_processes: auto
-
-# worker_connections: 2048
-
-# client_max_body_size: 512M

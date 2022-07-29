@@ -1,0 +1,15 @@
+max connections = 10
+exclude = lost+found/ .gitlab-ci.yml wp-config.php
+dont compress   = *.gz *.tgz *.zip *.z *.Z *.rpm *.deb *.bz2 *.rar *.7z *.mp3 *.jpg
+
+[WP]
+    path = /usr/share/nginx/gw22.pw/wordpress/
+    comment = Site gw22.pw
+    uid = www-data
+    gid = www-data
+    read only = no
+    list = yes
+    auth users = rsync_user
+    secrets file = /etc/rsyncd.scrt
+    hosts allow = localhost 10.30.0.50 10.30.0.51
+    hosts deny = *

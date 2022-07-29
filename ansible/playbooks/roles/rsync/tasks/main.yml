@@ -1,0 +1,26 @@
+---
+# file: roles/rsync/tasks/main.yml
+- name: 'RSYNC - Install & config RSYNC on both servers'
+  when: (rsync_target in inventory_hostname) or (rsync_source in inventory_hostname)
+  block:
+
+    - name: 'RSYNC - Install package rsync'
+      ansible.builtin.apt: name=rsync state=present
+
+    - name: 'RSYNC - Enable in "/etc/default/rsync" file'
+      ansible.builtin.lineinfile: dest='/etc/default/rsync' regexp="^RSYNC_ENABLE=" line="RSYNC_ENABLE=true"
+
+    - name: 'RSYNC - Create /etc/rsyncd.conf on rsync_target'
+      ansible.builtin.template: src="{{ role_path }}/files/rsyncd.conf.j2" dest='/etc/rsyncd.conf' mode='0640'
+
+- name: 'RSYNC - Create /etc/rsyncd.scrt on rsync_target'
+  ansible.builtin.template: src="{{ role_path }}/files/rsyncd.app.scrt.j2" dest='/etc/rsyncd.scrt' mode='0600'
+  when: rsync_target in inventory_hostname
+
+- name: 'RSYNC - Create /etc/rsyncd.scrt on rsync_source'
+  ansible.builtin.template: src="{{ role_path }}/files/rsyncd.gitlab.scrt.j2" dest='/etc/rsyncd.scrt' mode='0600'
+  when: rsync_source in inventory_hostname
+
+- name: 'RSYNC - Enable & Start rsync service to apply changes'
+  ansible.builtin.service: name=rsync state=restarted enabled=yes
+# _EOF_

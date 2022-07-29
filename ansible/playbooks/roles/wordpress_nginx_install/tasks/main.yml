@@ -1,0 +1,22 @@
+---
+- name: 'Install nginx'
+  block:
+    - name: 'Install pkgs - nginx'
+      become: true
+      ansible.builtin.apt:
+        pkg: [nginx]
+        update_cache: true
+        cache_valid_time: '28800'
+      notify:
+        - nginx systemd
+    - name: 'Remove default nginx config'
+      become: true
+      ansible.builtin.file:
+        name: /etc/nginx/sites-enabled/default
+        state: absent
+    - name: 'Restart service nginx (in all cases)'
+      become: true
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+# _EOF_

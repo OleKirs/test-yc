@@ -1,0 +1,23 @@
+---
+# Install Gitlab Runner if not installed
+- name: 'Gitlab Runner - Install (if not installed)'
+  tags: runner_install
+  when: "'runner' in inventory_hostname"
+  block:
+    - name: 'Gitlab Runner - Install prerequsites (list of packages)'
+      when: "'gitlab-runner' not in ansible_facts.packages"
+      ansible.builtin.apt:
+        name:
+          - git
+          - docker
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+    - name: 'Gitlab Runner - Install from .deb package'
+      when: "'gitlab-runner' not in ansible_facts.packages"
+      ansible.builtin.apt:
+        deb: "{{ ci_cd_runner_deb_source_url }}"
+        state: present
+      notify:
+        - Runner restart
+# _EOF_

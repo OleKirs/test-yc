@@ -1,0 +1,30 @@
+---
+# file: roles/node_exporter/tasks/main.yml
+- name: Populate service facts
+  tags: node_exporter_install
+  ansible.builtin.service_facts:
+- name: 'Node_exporter - Install if not installed'
+  tags: node_exporter_install
+  # when: ansible_facts.services['node_exporter.service'] is not defined
+  block:
+    - name: 'Node_exporter - Create group for Service account'
+      ansible.builtin.group: name='nodeusr' state=present
+    - name: 'Node_exporter - Create user Service account'
+      ansible.builtin.user: name='nodeusr' shell='/bin/false' create_home=false group='nodeusr'
+    - name: 'Node_exporter - Copy node_exporter from templates'
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/node_exporter"
+        dest: "/usr/local/bin/node_exporter"
+        mode: '0770'
+        owner: 'nodeusr'
+        group: 'nodeusr'
+    - name: 'Node_exporter - Copy node_exporter.service from templates'
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/node_exporter.service"
+        dest: "/etc/systemd/system/node_exporter.service"
+        mode: '0644'
+        owner: 'root'
+        group: 'root'
+    - name: 'Node_exporter - Enable & start service'
+      ansible.builtin.service: name=node_exporter enabled=true state=started
+# _EOF_

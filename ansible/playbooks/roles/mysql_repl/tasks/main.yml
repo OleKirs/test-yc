@@ -1,0 +1,86 @@
+---
+# Install two mysql-compatible servers (with "mariadb" engine) & enable 'master-slave' replication.
+- name: Install MariaDB Server
+#  tags: never, install
+  tags: install
+  block:
+    - name: 'Install MariaDB package'
+      ansible.builtin.apt: name=mariadb-server state=present update_cache=yes
+    - name: 'Install python3-pip'
+      ansible.builtin.apt: name=python3-pip state=present
+    - name: 'Make sure pymysql is present'
+      become: true # needed if the other tasks are not played as root
+      ansible.builtin.pip: name=pymysql state=present
+    - name: 'Install python module'
+      ansible.builtin.apt: name=python-mysqldb state=present
+    - name: 'Create account for "DB administrator"'
+      community.mysql.mysql_user: name='{{ dba_name }}' password='{{ dba_pw }}' priv="*.*:ALL,GRANT" check_implicit_admin=true
+        login_unix_socket=/var/run/mysqld/mysqld.sock host="%"
+    - name: 'Removes the MySQL test database'
+      community.mysql.mysql_db: name=test state=absent login_user='{{ dba_name }}' login_password='{{ dba_pw }}'
+    - name: 'Removes all anonymous user accounts'
+      community.mysql.mysql_user: name='' host_all=yes state=absent  login_user='{{ dba_name }}' login_password='{{ dba_pw }}'
+#    - name: 'Create readwrite user'
+#      community.mysql.mysql_user: name='{{ rwuser_name }}' host="%" password='{{ rwuser_pw }}' priv="*.*:SELECT,INSERT,UPDATE,DELETE,CREATE,DROP" state=present
+#        login_user=dba login_password='{{ dba_pw }}'
+- name: 'Creating new SQL-database'
+  block:
+    - name: 'Creating database'
+      community.mysql.mysql_db: name='{{ db_name }}' state=present login_user='{{ dba_name }}' login_password='{{ dba_pw }}'
+    - name: 'Create user for new SQL-database'
+      community.mysql.mysql_user: state=present name='{{ db_user }}' password='{{ db_user_pw }}' host='%' priv="{{ db_name }}.*:ALL,GRANT"
+        login_user='{{ dba_name }}' login_password='{{ dba_pw }}'
+- name: 'Modify configuration file to enable replication'
+  block:
+    - name: 'Create replication user account'
+      community.mysql.mysql_user: name='{{ repl_user_name }}' host="%" password='{{ repl_user_pw }}' priv="*.*:REPLICATION SLAVE" state=present
+        login_user='{{ dba_name }}' login_password='{{ dba_pw }}'
+    - name: 'Modify configuration file to listen on all interfaces'
+      ansible.builtin.lineinfile: dest=/etc/mysql/mariadb.conf.d/50-server.cnf
+        regexp="^bind-address" line="bind-address = 0.0.0.0"
+    - name: 'Modify configuration file to add db in replication'
+      ansible.builtin.lineinfile: dest=/etc/mysql/mariadb.conf.d/50-server.cnf
+        regexp="^#binlog_do_db" insertafter="^#binlog_do_db" line="binlog_do_db = {{ db_name }}"
+    - name: 'Modify configuration file to enable bin.log'
+      ansible.builtin.lineinfile: dest=/etc/mysql/mariadb.conf.d/50-server.cnf
+        regexp="^#log_bin" insertafter="^##log_bin" line="log_bin = /var/log/mysql/mysql-bin.log"
+    - name: 'Modify configuration file to setup server ID on master server'
+      when: master_db_srv_name in inventory_hostname
+      ansible.builtin.lineinfile: dest=/etc/mysql/mariadb.conf.d/50-server.cnf
+        regexp="^#server-id" line="server-id=1"
+    - name: 'Modify configuration file to setup server ID on slave server'
+      when: slave_db_srv_name in inventory_hostname
+      ansible.builtin.lineinfile: dest=/etc/mysql/mariadb.conf.d/50-server.cnf
+        regexp="^#server-id" line="server-id=2"
+    - name: 'Restart mysql service to apply changes'
+      ansible.builtin.service: name=mysql state=restarted
+- name: 'Prepare master server to replication'
+  tags: config
+  when: master_db_srv_name in inventory_hostname
+  block:
+    - name: 'RESET MASTER'
+      community.mysql.mysql_replication: mode=resetprimary login_user='{{ dba_name }}' login_password='{{ dba_pw }}'
+      register: result
+    - name: 'Print return information from the previous task'
+      ansible.builtin.debug: var=result verbosity=2
+    - name: 'Restart mysql service'
+      ansible.builtin.service: name=mysql state=restarted
+- name: 'Config replication on slave serer'
+  tags: config
+  when: slave_db_srv_name in inventory_hostname
+  block:
+    - name: 'Stop mysql replica thread'
+      community.mysql.mysql_replication: mode=stopreplica connection_name='primary-1' login_user='{{ dba_name }}' login_password='{{ dba_pw }}'
+    - name: 'Change primary to use replication'
+      community.mysql.mysql_replication:
+        mode=changeprimary connection_name='primary-1' primary_host='10.20.0.150' primary_port='3306'
+        primary_user='repl' primary_password='{{ repl_user_pw }}' primary_use_gtid=current_pos
+        login_user='{{ dba_name }}' login_password='{{ dba_pw }}'
+      register: result2
+    - name: 'Print return information from the previous task'
+      ansible.builtin.debug: var=result2 verbosity=2
+    - name: 'Start MariaDB replica with connection'
+      community.mysql.mysql_replication: mode=startreplica connection_name='primary-1' login_user='{{ dba_name }}' login_password='{{ dba_pw }}'
+    - name: 'Restart mysql service'
+      ansible.builtin.service: name=mysql state=restarted
+# _EOF_

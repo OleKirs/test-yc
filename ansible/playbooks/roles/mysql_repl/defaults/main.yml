@@ -1,0 +1,13 @@
+---
+master_db_srv_name: 'db01'
+slave_db_srv_name: 'db02'
+dba_name: 'dba'
+dba_pw: '11s3cr3tPaSSwordR'
+repl_user_name: 'repl'
+repl_user_pw: '22s3cr3tPaSSwordR'
+rwuser_name: 'rwuser'
+rwuser_pw: '33s3cr3tPaSSwordR'
+db_name: 'wordpress'
+db_user: 'wordpress'
+db_user_pw: 'wordpress'
+# _EOF_

@@ -8,11 +8,10 @@
     - wpdirectory: "/usr/share/nginx/gw22.pw"
     - db_name: "wordpress"
     - db_user: "wordpress"
-    - db_password: "wordpress"
+    - db_user_pw: "wordpress"
     - db_socket: "10.20.0.150:3306"
   roles:
-  - { role: nginx-wp }
-  - { role: php }
-  - { role: wordpress }
-
+    - wordpress_nginx_install
+    - php
+    - wordpress_site_config
 # _EOF_

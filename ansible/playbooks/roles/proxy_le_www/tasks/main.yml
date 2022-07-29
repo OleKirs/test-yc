@@ -1,0 +1,83 @@
+---
+# file: roles/nginx_le_install/tasks/main.yml
+# Instll NGINX & configure reverse proxy to default site (www.*)
+- name: 'Nginx-LE - Install nginx & letsencrypt & DH-group'
+  block:
+    - name: 'Nginx-LE - Install pkgs - nginx & letsencrypt'
+      become: true
+      ansible.builtin.apt:
+        pkg: [nginx, letsencrypt]
+        update_cache: true
+        cache_valid_time: '28800'
+      notify:
+        - nginx systemd
+    - name: 'Nginx-LE - Create letsencrypt directory'
+      become: true
+      ansible.builtin.file:
+        name: /var/www/letsencrypt
+        state: directory
+        mode: '0755'
+    - name: 'Nginx-LE - Remove default nginx config'
+      become: true
+      ansible.builtin.file:
+        name: /etc/nginx/sites-enabled/default
+        state: absent
+    - name: 'Nginx-LE - Install system nginx config'
+      become: true
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        mode: '0640'
+# Prepare to letsencrypt requests
+    - name: 'Nginx-LE - Install nginx site for letsencrypt requests'
+      become: true
+      ansible.builtin.template:
+        src: nginx-http.j2
+        dest: /etc/nginx/sites-enabled/http
+        mode: '0640'
+    - name: 'Nginx-LE - Restart service nginx (in all cases)'
+      become: true
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+    - name: 'Nginx-LE - Generate dhparams'
+      tags: dh_generation
+      become: true
+    #  community.crypto.openssl_dhparam
+    #    path: /etc/nginx/dhparams.pem
+    #    size: 2048
+      ansible.builtin.shell: "openssl dhparam -out /etc/nginx/dhparams.pem 2048"
+      args:
+        creates: /etc/nginx/dhparams.pem
+- name: 'Nginx-LE - Create letsencrypt certificate'
+  tags: create_le_cert
+  become: true
+  ansible.builtin.shell: |
+    letsencrypt certonly -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }}
+#    letsencrypt certonly --test-cert -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }}
+  args:
+    creates: /etc/letsencrypt/live/{{ domain_name }}
+  notify:
+    - nginx reload
+- name: 'Nginx-LE - Install nginx site for specified site'
+  tags: site_cfg
+  become: true
+  ansible.builtin.template:
+    src: nginx-ssl-default.j2
+    dest: /etc/nginx/sites-enabled/le_{{ domain_name }}.conf
+    mode: '0640'
+  notify:
+    - nginx reload
+# Check new nginx config by reload one before write change in cron
+- name: 'Nginx-LE - Force all notified handlers'
+  ansible.builtin.meta: flush_handlers
+- name: 'Nginx-LE Add letsencrypt cronjob for cert renewal'
+  tags: site_cfg
+  become: true
+  ansible.builtin.cron:
+    name: letsencrypt_renewal
+    special_time: weekly
+    job: letsencrypt certonly -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }} && service nginx reload
+  notify:
+    - cron restart
+# _EOF_

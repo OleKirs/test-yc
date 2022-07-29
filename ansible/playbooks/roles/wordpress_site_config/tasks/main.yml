@@ -1,0 +1,50 @@
+---
+# file: roles/wordpress_site_config/tasks/main.yml
+- name: 'Wordpress - create site configuration in Nginx'
+  become: true
+  ansible.builtin.template:
+    src: wordpress.conf.j2
+    dest: /etc/nginx/sites-available/wordpress.conf
+    owner: "www-data"
+    group: "www-data"
+    mode: '0640'
+  notify: nginx restart
+- name: 'Wordpress - activate site config in Nginx'
+  become: true
+  ansible.builtin.file:
+    src: '/etc/nginx/sites-available/wordpress.conf'
+    dest: '/etc/nginx/sites-enabled/wordpress.conf'
+    state: 'link'
+    owner: "www-data"
+    group: "www-data"
+    mode: '0640'
+- name: 'Wordpress - create directory for installation'
+  tags: wp-config
+  become: true
+  ansible.builtin.file:
+    path: "{{ wpdirectory }}"
+    state: "directory"
+    owner: "www-data"
+    group: "www-data"
+    mode: '0750'
+- name: 'Wordpress - download archive'
+  tags: [wp-config, wp_with_all_content]
+  ansible.builtin.get_url:
+    url: "{{ download_url }}"
+    dest: "/tmp/latest.tar.gz"
+    mode: '0644'
+- name: 'Wordpress - unpack installation files'
+  tags: [wp-config, wp_with_all_content]
+  become: true
+  ansible.builtin.shell: "tar xvfz /tmp/latest.tar.gz -C {{ wpdirectory }} && chown -R www-data:www-data {{ wpdirectory }}"
+- name: 'Wordpress - install wp-config.php'
+  tags: wp-config
+  become: true
+  ansible.builtin.template:
+    src: wp-config.php.j2
+    dest: "{{ wpdirectory }}/wordpress/wp-config.php"
+    owner: "www-data"
+    group: "www-data"
+    mode: '0640'
+  notify: nginx restart
+# _EOF_

@@ -1,0 +1,6 @@
+---
+- name: Runner restart
+  ansible.builtin.service:
+    name: gitlab-runner
+    state: restarted
+# _EOF_

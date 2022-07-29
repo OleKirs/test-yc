@@ -1,0 +1,18 @@
+---
+# file: roles/monitor/defaults/main.yml
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-compose-plugin
+  - docker-compose
+docker_project_dir: '/opt/prometheus_stack'
+prometheus_targets: '[localhost:9100]'
+telegram_admin_id: '1234567890'
+tegegram_tocken: '1234567890:AAETxTOKENxxMUSTxBExxHERE'
+
+# _EOF_

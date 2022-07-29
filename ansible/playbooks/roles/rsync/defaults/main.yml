@@ -1,0 +1,6 @@
+---
+# Name of soures host in inventory
+rsync_source: 'srv1'
+# Name of terget host in inventory
+rsync_target: 'srv2'
+# _EOF_

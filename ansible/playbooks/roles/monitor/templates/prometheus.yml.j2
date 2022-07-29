@@ -1,0 +1,15 @@
+---
+scrape_configs:
+  - job_name: node
+    scrape_interval: 5s
+    static_configs:
+    - targets: {{ prometheus_targets }}
+rule_files:
+  - "alert.rules.yml"
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets:
+      - "alertmanager:9093"
+# _EOF_

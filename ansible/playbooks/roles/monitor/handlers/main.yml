@@ -1,0 +1,11 @@
+---
+- name: Docker-compose reload
+  ansible.builtin.shell: cmd='docker-compose stop && sleep 10 && docker-compose up -d'
+  args: chdir="{{ docker_project_dir }}"
+- name: Docker-compose prometheus reload
+  ansible.builtin.shell: cmd='sleep 20 && docker-compose stop prometheus && sleep 5 && docker-compose up -d prometheus'
+  args: chdir="{{ docker_project_dir }}"
+- name: Docker-compose alertmanager reload
+  ansible.builtin.shell: cmd='sleep 20 && docker-compose stop alertmanager && sleep 5 && docker-compose up -d alertmanager'
+  args: chdir="{{ docker_project_dir }}"
+# _EOF_

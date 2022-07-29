@@ -1,0 +1,31 @@
+---
+# file: ci_cd.yml
+# 1. Install Gitlab-CE & Gitlab runner to "http://gitlab.gw22.pw" (change target URL in EXTERNAL_URL if nedeed)
+# 2. Install RSYNC to deploy files from gitlan in wordpress site directory.
+#
+# Play #1
+- name: 'Install Gitlab and Runner from .deb package'
+  hosts: cicd
+  strategy: free
+  environment:
+    EXTERNAL_URL: "http://gitlab.gw22.pw"
+  vars:
+    ci_cd_gitlab_deb_source_url: 'https://packages.gitlab.com/gitlab/gitlab-ce/packages/ubuntu/bionic/gitlab-ce_15.2.0-ce.0_amd64.deb/download.deb'
+    ci_cd_runner_deb_source_url: 'https://gitlab-runner-downloads.s3.amazonaws.com/latest/deb/gitlab-runner_amd64.deb'
+  become: true
+  gather_facts: true
+  roles:
+    - gitlab_ce
+    - gitlab_runner
+# Play #2
+- name: 'RSYNC - Install & configure for CI-CD on Gitlab & Wordpress'
+  hosts: app,gitlab
+  vars:
+    rsync_source: 'gitlab'
+    rsync_target: 'app'
+  become: true
+  gather_facts: false
+  strategy: free
+  roles:
+    - rsync
+# _EOF_

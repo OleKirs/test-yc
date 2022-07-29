@@ -1,0 +1,41 @@
+---
+# file monitoring.yml
+# 1. Install Node_exporter on all instance in inventory
+# 2. Ceate monitoring stack on instance 'monitoring'
+# 3. Disable built-in prometheus in Gitlab instance
+#
+# Play #1
+- name: 'Install Node_exporter'
+  hosts: all
+#  hosts: all,!monitoring,!gitlab
+  become: true
+  roles:
+    - node_exporter
+# Play #2
+- name: 'Install monitoring stack (Prometheus + Grafana + AlertManager)'
+  hosts: monitoring
+  become: true
+  gather_facts: false
+  vars:
+    docker_project_dir: '/opt/prometheus_stack'
+    prometheus_targets: '[10.10.0.5:9100,10.20.0.100:9100,10.20.0.150:9100,10.20.0.155:9100,10.30.0.50:9100,10.30.0.51:9100,10.30.0.200:9100]'
+  roles:
+    - monitor
+# Play #3
+- name: 'Disable built-in prometheus in Gitlab instance'
+  hosts: gitlab
+  gather_facts: false
+  tags: gitlab_dis_bi_mon
+  tasks:
+    - name: 'Modify configuration file /etc/gitlab/gitlab.rb'
+      become: true
+      ansible.builtin.lineinfile: dest=/etc/gitlab/gitlab.rb
+        regexp="^# prometheus['enable'] = true" line="prometheus_monitoring['enable'] = false"
+    - name: 'Modify configuration file /etc/gitlab/gitlab.rb'
+      become: true
+      ansible.builtin.lineinfile: dest=/etc/gitlab/gitlab.rb
+        regexp="^# node_exporter['enable'] = true" line="node_exporter['enable'] = false"
+    - name: 'Reconfigure Gitlab'
+      become: true
+      ansible.builtin.shell: 'gitlab-ctl reconfigure'
+# _EOF_

@@ -1,0 +1,4 @@
+---
+- name: Gitlab restart
+  ansible.builtin.shell: 'sleep 20 && gitlab-ctl restart'
+# _EOF_

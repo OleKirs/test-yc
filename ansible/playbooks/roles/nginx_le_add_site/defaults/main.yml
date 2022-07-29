@@ -1,8 +1,0 @@
----
-# file roles/nginx/defaults/main.yml
-
-domain_name: test.local
-letsencrypt_email: email_address@test.local
-worker_processes: auto
-worker_connections: 2048
-client_max_body_size: 512M

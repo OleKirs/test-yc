@@ -1,6 +1,9 @@
 ---
 # file: site.yml
+# Install application on infrastucture to deploy wordpress in Yandex Cloud
 - import_playbook: nat-instance.yml
 - import_playbook: dbservers.yml
 - import_playbook: wordpress.yml
-
+- import_playbook: ci_cd.yml
+- import_playbook: monitoring.yml
+# _EOF_

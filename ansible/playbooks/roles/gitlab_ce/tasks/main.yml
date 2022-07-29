@@ -1,0 +1,30 @@
+---
+# Install Gitlab-CE if not installed
+- name: 'Gitlab-CE - Gather the package facts'
+  ansible.builtin.package_facts:
+    manager: auto
+- name: 'Gitlab-CE - Install (if not installed)'
+  tags: gitlab_install
+  when: "'gitlab' in inventory_hostname"
+  block:
+    - name: 'Gitlab-CE - Install prerequsites (list of packages)'
+      when: "'gitlab-ce' not in ansible_facts.packages"
+      ansible.builtin.apt:
+        name:
+          - curl
+          - openssh-server
+          - ca-certificates
+          - tzdata
+          - perl
+          - postfix
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+    - name: 'GitLab-CE - Install from .deb package'
+      when: "'gitlab-ce' not in ansible_facts.packages"
+      ansible.builtin.apt:
+        deb: "{{ ci_cd_gitlab_deb_source_url }}"
+        state: present
+      notify:
+        - Gitlab restart
+# _EOF_

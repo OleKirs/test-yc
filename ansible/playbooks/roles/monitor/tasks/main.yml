@@ -1,0 +1,83 @@
+---
+# file roles/monitor/tasks/main.yml
+# Install Stack of containers with Prometheus, Grafana & AlertManager
+- name: 'Monitor - Install docker & docker-compose'
+  tags: docker_compose_install
+  block:
+    - name: 'Monitor - Add GPG apt Key'
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: 'Monitor - Add Repository'
+      ansible.builtin.apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu bionic stable
+        state: present
+        update_cache: true
+    - name: 'Monitor - Install packages'
+      ansible.builtin.apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: true
+    - name: 'Monitor - Start service'
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+- name: 'Monitor - Create a project directory if it does not exist'
+  tags: docker_compose_cfg
+  become: true
+  ansible.builtin.file:
+    state: directory
+    mode: '0755'
+    path: "{{ item }}"
+  with_items:
+    - "{{ docker_project_dir }}"
+    - "{{ docker_project_dir }}/prometheus"
+    - "{{ docker_project_dir }}/alertmanager"
+- name: 'Monitor - Copy docker-compose.yml from templates'
+  tags: docker_compose_cfg
+  become: true
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/docker-compose.yml.j2"
+    dest: "{{ docker_project_dir }}/docker-compose.yml"
+    mode: '0644'
+  notify:
+    - Docker-compose reload
+- name: 'Monitor - Prometheus - Copy prometheus.yml from templates'
+  tags: [docker_compose_cfg, prometheus_cfg]
+  become: true
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/prometheus.yml.j2"
+    dest: "{{ docker_project_dir }}/prometheus/prometheus.yml"
+    mode: '0644'
+  notify:
+    - Docker-compose prometheus reload
+- name: 'Monitor - Prometheus - Copy alert.rules.yml from templates'
+  tags: [docker_compose_cfg, prometheus_cfg]
+  become: true
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/alert.rules.yml"
+    dest: "{{ docker_project_dir }}/prometheus/alert.rules.yml"
+    mode: '0644'
+  notify:
+    - Docker-compose prometheus reload
+- name: 'Monitor - AlertManager - Copy config.yml from templates'
+  tags: [docker_compose_cfg, alertmanager_cfg]
+  become: true
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/alertmanager_config.yml"
+    dest: "{{ docker_project_dir }}/alertmanager/config.yml"
+    mode: '0644'
+  notify:
+    - Docker-compose alertmanager reload
+- name: 'Monitor - Start containers'
+  tags: docker_compose_start
+  ansible.builtin.shell: 'docker-compose up -d'
+#      register: docker_compose_start
+#      changed_when: docker_compose_start.rc = 0
+  failed_when: false
+  args:
+    chdir: "{{ docker_project_dir }}"
+- name: 'Debug - docker_compose_start is:'
+  ansible.builtin.debug: var=docker_compose_start
+# _EOF
