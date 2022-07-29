@@ -16,7 +16,7 @@
 3. Подготовить инфраструктуру с помощью Terraform на базе облачного провайдера YandexCloud. 
 
 > Выполнено.   
-> ![Панель YC](files/imgs/yc_cloud.png "Панель управления в YC")  
+> ![Панель YC](files/imgs/ya_cloud.png "Панель управления в YC")  
 
 4. Настроить внешний Reverse Proxy на основе Nginx и LetsEncrypt.  
 
